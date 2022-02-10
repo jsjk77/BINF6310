@@ -204,6 +204,6 @@ Show your work/code/justification for all answers.
 
 ```{r}
 # Cost * minimum required tests * # patients
-1*17*1000000
+1*21*1000000
 ```
 Since each test costs $1 and there are 1 million patients, along with the fact that it will take 21 tests to be over the hospital's requirement on tests, the hospital should budget for 21 million dollars. This is from the simulation of the patients who have the disease which is more important than the patients who don't have the disease.
