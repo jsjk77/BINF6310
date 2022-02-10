@@ -50,29 +50,40 @@ for (i in 1:length(data)) {
 (Show your work)
 
 ```{r}
-rm=(list=ls())
-probs <- c(0.1,0.1,0.1,0.1,0.1,0.5)
-trialSizes <- c(5,10,15,20,25,30,40,50,100,200,300,400,500,1000,2000,3000,4000,5000,10000,20000,30000,100000)
-means <- vector(mode="double",length=length(trialSizes))
-variances <- vector(mode="double",length=length(trialSizes))
+rm(list=ls())
+# Probs of loaded and fair die, respectively
+probDie <- c(0.01,0.99)
 
-for (i in 1:length(trialSizes)) {
-  rolls <- vector(length=trialSizes[i],mode="double")
-  
-  for (j in 1:trialSizes[i]) {
-    rolls[j] <- sample(1:6, 1, prob=probs)
+# Likelihoods of number rolled
+loaded <- c(0.1,0.1,0.1,0.1,0.1,0.5)
+fair <- c(1/6,1/6,1/6,1/6,1/6,1/6)
+
+rollLoadedDie <- function(x) {
+  rolls <- vector(length=x,mode="double")
+  for (j in 1:x) {
+    rolls[j] <- sample(1:6, 1, prob=loaded)
   }
-  means[i] <- mean(rolls)
-  variances[i] <- var(rolls)
+  return (rolls)
 }
 
-plot(log10(trialSizes),means)
-lines(log10(trialSizes),rep(4.5,length(trialSizes)))
-windows()
-plot(log10(trialSizes),variances)
-lines(log10(trialSizes),rep(3.25,length(trialSizes)))
+data <- rollLoadedDie(100)
+vals <- vector();
+titleStr <- ""
+for (i in 1:length(data)) {
+  
+  vals[i] <- probDie[1];
+  
+  denom <- probDie[1] * loaded[data[i]] + probDie[2] * fair[data[i]];
+  
+  probDie[1] <- probDie[1] * loaded[data[i]] / denom;
+  probDie[2] <- probDie[2] * fair[data[i]] / denom;
+  
+  titleStr <- paste(titleStr,data[i],sep="")
+  plot(1:i,vals, main=titleStr,ylim=c(0,1),xlim=c(1,length(data)+1))
+}
+vals
 ```
-I reused the code from Lab1 and ran them multiple times. I found that around 1000 trials, the means and variances converged to their expected values to provide confidence that the die was loaded.
+I found that around 54 rolls, I was 99.999% confident that the die was loaded.
 
 
 
