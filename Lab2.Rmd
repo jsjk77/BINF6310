@@ -1,0 +1,198 @@
+---
+title: "BINF6310Lab2"
+author: "Jonathan Kim"
+date: "2/3/2022"
+output: html_document
+---
+Part A
+
+(1) You walk into the “occasionally dishonest casino”  with prior probabilities and likelihoods set to the values in slides 21-25 of lecture #4. (that is, a “loaded” die has a 10% chance of getting a 1-5 and a 50% chance of getting a 6 but 99% of the dice are fair)
+
+You pick up one die and with it roll:
+
+2 3 2 6 3 5 6 2 6 6 2 6 6 2 3 6 6 6 5 6 6 5 6 6 6 6 6 4 6 3 3 3 6 6 5 6 6
+
+Make a graph of the posterior probability that you have picked up a loaded die as a function of the number of times you have rolled the die.
+
+Show your code…
+
+  You can represent the rolls as
+data<-c(2,3,2,6,3,5,6,2,6,6,2,6,6,2,3,6,6,6,5,6,6,5,6,6,6,6,6,4,6,3,3,3,6,6,5,6,6)
+
+```{r}
+rm(list=ls())
+# Probs of loaded and fair die, respectively
+probDie <- c(0.01,0.99)
+
+# Likelihoods of number rolled
+loaded <- c(0.1,0.1,0.1,0.1,0.1,0.5)
+fair <- c(1/6,1/6,1/6,1/6,1/6,1/6)
+
+data<-c(2,3,2,6,3,5,6,2,6,6,2,6,6,2,3,6,6,6,5,6,6,5,6,6,6,6,6,4,6,3,3,3,6,6,5,6,6)
+vals <- vector();
+
+titleStr <- ""
+for (i in 1:length(data)) {
+  
+  vals[i] <- probDie[1];
+  
+  denom <- probDie[1] * loaded[data[i]] + probDie[2] * fair[data[i]];
+  
+  probDie[1] <- probDie[1] * loaded[data[i]] / denom;
+  probDie[2] <- probDie[2] * fair[data[i]] / denom;
+  
+  titleStr <- paste(titleStr,data[i],sep="")
+  plot(1:i,vals, main=titleStr,ylim=c(0,1),xlim=c(1,length(data)+1))
+}
+```
+
+(2) How many times on average would you need to roll a loaded die to be 99.999%  sure that it was loaded?  
+(Show your work)
+
+```{r}
+rm=(list=ls())
+probs <- c(0.1,0.1,0.1,0.1,0.1,0.5)
+trialSizes <- c(5,10,15,20,25,30,40,50,100,200,300,400,500,1000,2000,3000,4000,5000,10000,20000,30000,100000)
+means <- vector(mode="double",length=length(trialSizes))
+variances <- vector(mode="double",length=length(trialSizes))
+
+for (i in 1:length(trialSizes)) {
+  rolls <- vector(length=trialSizes[i],mode="double")
+  
+  for (j in 1:trialSizes[i]) {
+    rolls[j] <- sample(1:6, 1, prob=probs)
+  }
+  means[i] <- mean(rolls)
+  variances[i] <- var(rolls)
+}
+
+plot(log10(trialSizes),means)
+lines(log10(trialSizes),rep(4.5,length(trialSizes)))
+windows()
+plot(log10(trialSizes),variances)
+lines(log10(trialSizes),rep(3.25,length(trialSizes)))
+```
+I reused the code from Lab1 and ran them multiple times. I found that around 1000 trials, the means and variances converged to their expected values to provide confidence that the die was loaded.
+
+
+
+
+
+Part B
+
+You are consulting for a hospital.  They have a diagnostic test for a disease with a known background prevalence of 0.1%.
+
+The test has the following properties:
+p(positive result | person has disease) = 0.91
+p(negative result| person does not have disease) = 0.84
+
+The cost of running the test one time is $1.  The test can be repeated for each patient and the results of the
+test are independent of one another allowing for Bayesian updates.  The test always yields a positive or negative 
+result.
+
+The requirement of the hospital is that the test is repeated for each patient until a Bayesian posterior 
+of at least 0.99999 is reached.
+
+Run simulations for a patient with the disease.  About how many times on average must the test be repeated
+to achieve the hospital’s requirements?  
+```{r}
+rm(list=ls())
+# p(diseased), p(not diseased)
+priors <- c(0.001,0.999)
+
+# p(has the disease), p(does not have disease)
+likelihoodGivenDiseased <- c(0.91,0.09)
+likelihoodGivenNotDiseased <- c(0.16,0.84)
+
+getDataFromLikelihood <- function(likelihood, numPoints) {
+  d <- vector(mode="integer",length=numPoints);
+  
+  for (i in 1:numPoints) {
+    if (runif(1) <= likelihood[1]) {
+      d[i] <- 1;
+    }
+    else {
+      d[i] <- 2;
+    }
+  }
+  return (d)
+}
+
+#getDataFromLikelihood(likelihoodGivenDiseased,50)
+#getDataFromLikelihood(likelihoodGivenNotDiseased,50)
+
+data <- getDataFromLikelihood(likelihoodGivenDiseased,50)
+vals <- vector();
+titleStr <- ""
+for (i in 1:length(data)) {
+  
+  vals[i] <- priors[1];
+  
+  denom <- priors[1] * likelihoodGivenDiseased[data[i]] + priors[2] * likelihoodGivenNotDiseased[data[i]];
+  
+  priors[1] <- priors[1] * likelihoodGivenDiseased[data[i]] / denom;
+  priors[2] <- priors[2] * likelihoodGivenNotDiseased[data[i]] / denom;
+  
+  titleStr <- paste(titleStr,data[i],sep="")
+  plot(1:i,vals, main=titleStr,ylim=c(0,1),xlim=c(1,length(data)+1))
+}
+vals
+```
+It takes about 21 times to pass a posterior of 0.99999.
+
+(2) Repeat the simulations for a patient without the disease.  About how many times on average must the 
+test be repeated to achieve the hospital’s requirements?
+
+```{r}
+rm(list=ls())
+# p(diseased), p(not diseased)
+priors <- c(0.001,0.999)
+
+# p(has the disease), p(does not have disease)
+likelihoodGivenDiseased <- c(0.91,0.09)
+likelihoodGivenNotDiseased <- c(0.16,0.84)
+
+getDataFromLikelihood <- function(likelihood, numPoints) {
+  d <- vector(mode="integer",length=numPoints);
+  
+  for (i in 1:numPoints) {
+    if (runif(1) <= likelihood[1]) {
+      d[i] <- 1;
+    }
+    else {
+      d[i] <- 2;
+    }
+  }
+  return (d)
+}
+
+data <- getDataFromLikelihood(likelihoodGivenNotDiseased,50)
+vals <- vector();
+titleStr <- ""
+for (i in 1:length(data)) {
+  
+  vals[i] <- priors[2];
+  
+  denom <- priors[1] * likelihoodGivenDiseased[data[i]] + priors[2] * likelihoodGivenNotDiseased[data[i]];
+  
+  priors[1] <- priors[1] * likelihoodGivenDiseased[data[i]] / denom;
+  priors[2] <- priors[2] * likelihoodGivenNotDiseased[data[i]] / denom;
+  
+  titleStr <- paste(titleStr,data[i],sep="")
+  plot(1:i,vals, main=titleStr,ylim=c(0,1),xlim=c(1,length(data)+1))
+}
+vals
+```
+It takes 4 times to reach the hospital's requirement.
+
+(3) The hospital plans to run the test on one million patients per year.  At a cost of $1 per test, about how much
+should the hospital budget to run these tests?  (That is to say, for a million patients, how many tests can 
+the hospital anticipate running?) (More than a million dollars).
+
+Show your work/code/justification for all answers.  	
+
+```{r}
+# Cost * minimum required tests * # patients
+1*17*1000000
+```
+Since each test costs $1 and there are 1 million patients, along with the fact that it will take 21 tests to be over the hospital's requirement on tests, the hospital should budget for 21 million dollars. This is from the simulation of the patients who have the disease which is more important than the patients who don't have the disease.
