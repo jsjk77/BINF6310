@@ -203,7 +203,46 @@ the hospital anticipate running?) (More than a million dollars).
 Show your work/code/justification for all answers.  	
 
 ```{r}
-# Cost * minimum required tests * # patients
-1*21*1000000
+rm(list=ls())
+# p(diseased), p(not diseased)
+priors <- c(0.001,0.999)
+
+# p(has the disease), p(does not have disease)
+likelihoodGivenDiseased <- c(0.91,0.09)
+likelihoodGivenNotDiseased <- c(0.16,0.84)
+
+getDataFromLikelihood <- function(likelihood, numPoints) {
+  d <- vector(mode="integer",length=numPoints);
+  
+  for (i in 1:numPoints) {
+    if (runif(1) <= likelihood[1]) {
+      d[i] <- 1;
+    }
+    else {
+      d[i] <- 2;
+    }
+  }
+  return (d)
+}
+
+data <- getDataFromLikelihood(likelihoodGivenDiseased,50)
+vals <- vector();
+titleStr <- ""
+for (i in 1:length(data)) {
+  
+  vals[i] <- priors[1];
+  
+  denom <- priors[1] * likelihoodGivenDiseased[data[i]] + priors[2] * likelihoodGivenNotDiseased[data[i]];
+  
+  priors[1] <- priors[1] * likelihoodGivenDiseased[data[i]] / denom;
+  priors[2] <- priors[2] * likelihoodGivenNotDiseased[data[i]] / denom;
+  
+  titleStr <- paste(titleStr,data[i],sep="")
+  plot(1:i,vals, main=titleStr,ylim=c(0,1),xlim=c(1,length(data)+1))
+}
+vals #12, 14, 17, 17, 19, 12, 19
+mean(12, 14, 17, 17, 19, 12, 19) # 12
 ```
-Since each test costs $1 and there are 1 million patients, along with the fact that it will take 21 tests to be over the hospital's requirement on tests, the hospital should budget for 21 million dollars. This is from the simulation of the patients who have the disease which is more important than the patients who don't have the disease.
+I ran the code multiple times and recorded the number of tests it took to pass 99.999% confidence and averaged those numbers.
+
+Since each test costs $1 and there are 1 million patients, along with the fact that it will take about 12 tests to be over the hospital's requirement on tests, the hospital should budget for 12 million dollars. This is from the simulation of the patients who have the disease which is more important than the patients who don't have the disease.
