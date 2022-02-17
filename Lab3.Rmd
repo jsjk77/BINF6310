@@ -16,8 +16,8 @@ seq1=seq(0,1,0.01)
 vals <- vector(mode="double",length=length(seq1));
 for (i in 1:length(seq1)) {
   vals[i] <- dexp(seq1[i],rate=5) / 0.9932621
-  plot(vals)
 }
+plot(vals)
 ```
 
 (1B)  Calculate the posterior graph with both the Metropolis algorithm and grid approximation for a case with 14 heads and 10 tails (where x = prob(head)).
@@ -74,6 +74,7 @@ for( x in xVals )
 
 lines(myHist$mids,posteriorDist / sum ,col="blue") 
 lines(myHist$mids,dbeta(myHist$mids, 9+14, 9+10)/sum(dbeta(myHist$mids,23,19)),col="black")
+legend('topleft', legend=c("Metropolis", "Grid Approx","Exact"), col=c("red", "blue","black"),lty=1:2,cex=0.8)
 ```
 
 (1C)  Repeat the above calculation but for a case of 583 heads and 417 tails. 
@@ -128,6 +129,7 @@ for( x in xVals )
 
 lines(myHist$mids,posteriorDist / sum ,col="blue") 
 lines(myHist$mids,dbeta(myHist$mids, 9+583, 9+417)/sum(dbeta(myHist$mids,9+583,9+417)),col="black")
+legend('topleft', legend=c("Metropolis", "Grid Approx","Exact"), col=c("red", "blue","black"),lty=1:2,cex=0.8)
 ```
 The three posterior graphs look much closer to each other than in 1b) due to the central limit theorem. As the trial numbers increase, they all approach a normal distribution or the expected distribution.
 
