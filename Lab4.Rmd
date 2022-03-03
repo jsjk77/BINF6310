@@ -1,0 +1,127 @@
+---
+title: "Lab4"
+author: "Jonathan Kim"
+date: "2/24/2022"
+output: html_document
+---
+
+Download this dataset:
+http://afodor.github.io/classes/stats2015/longitdunalRNASeqData.zip
+
+(right-click in the browser and say “save as…”)
+
+Each row in the spreadsheet represents a different gene in an RNA-seq experiment. The samples are E. Coli derived from two different mice under identical conditions (i.e. biological replicates).
+
+(1) Read the dataset into R using commands something like...
+
+setwd("C:\\classes\\Advanced_Stats_Spring2022\\Lab4_HW1")
+
+myT <- read.table("nc101_scaff_dataCounts.txt",header=TRUE,row.names=1)
+
+```{r}
+rm(list=ls())
+myT<- read.table("./longitdunalRNASeqData/nc101_scaff_dataCounts.txt",header=TRUE,row.names=1)
+```
+
+(2) On a log10-log10 scale, show a plot of the counts for the two samples “D2_01” and “D2_02”.
+
+Qualitatively, do the biological replicates appear to have similar patterns of gene expression?
+
+```{r}
+plot(log10(myT$D2_01),log10(myT$D2_02))
+```
+Qualitatively, the biological replicates appear to roughly have similar patterns of gene expression.
+
+(3) On a log10-log10 scale, plot the variance of all genes (across all samples) vs. the mean (across all genes) with a red line on your graph representing the identity line.  Does the mean equal the variance for these samples?   
+(The commands apply(myT, 1, mean) and apply(myT, 1, var) will be of some use).  
+
+```{r}
+variance <- log10(apply(myT,1,var))
+means <- log10(apply(myT,1,mean))
+plot(means,variance)
+lines(c(-5,5),c(-5,5),col="red")
+```
+No, they are not equal for these samples.
+
+(4) Consider the first gene in the spreadsheet (e.g. NC101_00003).  Make a two by two contingency table:
+columns: Sequences in D2_01,	Sequences in D2_02
+rows: Assigned to NC101_00003, Not assigned to NC101_00003		
+
+use the two sided fisher.test to generate a p-value for the null hypothesis that the columns and rows of the contingency table are independent.
+
+```{r}
+sums01 <- apply(myT,2,sum)
+m <- matrix(c(myT[1,1], myT[1,2], sums01[1]-myT[1,1], sums01[2]-myT[1,2] ), nrow=2)
+test <- fisher.test(m,alternative="two.sided")
+pValue <- test$p.value
+pValue
+```
+
+(5) Now generate a p-value for all the genes in the spreadsheet from the Fisher test.  Plot out those p-values in a histogram.  Are they uniformly distributed?  Would you expect them to be?  Are the p-values more significant, less significant or what we would expect under a uniform distribution? 
+
+```{r}
+rm(list=ls())
+myT<- read.table("./longitdunalRNASeqData/nc101_scaff_dataCounts.txt",header=TRUE,row.names=1)
+sums01 <- apply(myT,2,sum)
+
+pValue <- vector();
+for (i in 1:nrow(myT)) {
+  m <- matrix(c(myT[i,1], myT[i,2], sums01[1]-myT[i,1], sums01[2]-myT[i,2] ), nrow=2)
+  test <- fisher.test(m)
+  pValue[i] <- test$p.value
+}
+hist(pValue)
+```
+They were not uniformly distributed. No, I wouldn't expect them to be because these are two different mice that could have drastically different microbiomes. There is a high frequency of significance, but also has a high frequency of no significance. They are generally more significant than what we would expect under an uniform distribution.
+
+(5b) How does the p-value distribution change if you remove low abundance genes (with for example myT <- myT[(myT$D2_01 + myT$D2_02 > 50),]
+```{r}
+myT2 <- myT[(myT$D2_01 + myT$D2_02 > 50),]
+sums02 <- apply(myT2,2,sum)
+
+pValue2 <- vector();
+for (i in 1:nrow(myT2)) {
+  m <- matrix(c(myT2[i,1], myT2[i,2], sums02[1]-myT2[i,1], sums02[2]-myT2[i,2] ), nrow=2)
+  test <- fisher.test(m)
+  pValue2[i] <- test$p.value
+}
+hist(pValue2)
+```
+The frequency of lower p-values is still high with the higher p-value frequency decreased. It shifts to become more significant.
+
+(6) Add 1 to every value in the table ( with something like myT = myT + 1 ).  This is called adding a pseudo-count.  Now consider the first gene (NC101_00003 ) again.  From the first experiment, calculate 
+	
+expected frequency = p = 
+		(# Assigned to NC101_00003 in D2_01)/total # of sequences in D2_01)
+
+Now use poisson.test to assign a p-value for the null hypothesis that value of p derived from D2_01 could have produced the number of reads observed for this gene in D2_02 .
+
+```{r}
+myT <- read.table("./longitdunalRNASeqData/nc101_scaff_dataCounts.txt",header=TRUE,row.names=1)
+myT = myT + 1
+sums01 <- apply(myT,2,sum)
+freq1 <- myT[1,1]/sums01[1]
+numMarked <- myT[1,2]
+(ptest = poisson.test(numMarked, sums01[2],freq1,alternative="two.sided"))
+ptest$p.value
+```
+
+(7) Repeat the calculation in (6) for every gene in the spreadsheet.  Graph these p-values against the p-values produced in (5) on a log10-log10 plot.  How well do they agree? 
+
+(Note: since the mean does not equal the variance, the models make assumptions that are not supported by the data!  Also, with n=1 in both conditions, our sample size is small and we would want to be very careful about putting too much weight in any conclusions we draw from such a small sample size...)
+
+```{r}
+myT <- read.table("./longitdunalRNASeqData/nc101_scaff_dataCounts.txt",header=TRUE,row.names=1)
+myT = myT + 1
+sums01 <- apply(myT,2,sum)
+final <- vector();
+for (i in 1:nrow(myT)) {
+  freq1 <- myT[i,1]/sums01[1]
+  #print(freq1)
+  numMarked <- myT[i,2]
+  final[i] <- poisson.test(numMarked, sums01[2],r=freq1)$p.value
+}
+plot(log10(pValue),log10(final))
+lines(c(-400,400),c(-400,400),col="red")
+```
+They mostly agree at around higher values.
