@@ -1,0 +1,116 @@
+---
+title: "Lab5"
+author: "Jonathan Kim"
+date: "3/17/2022"
+output: html_document
+---
+
+(1A): Download the data from here examining the relationship between the number of cell divisions and cancer risk: https://fodorclasses.github.io/classes/stats2020/cancerRisk.txt
+
+On a log10-log10 scale graph Lifetime_cancer_risk (on the y-axis) vs. CumulativeCellDivisions (on the x-axis).  (This reproduces Fig. 1 from the paper).
+
+(You can read in the file with read.table("cancerRisk.txt", header=TRUE, sep="\t")
+
+```{r}
+rm(list=ls())
+myT <- read.table("./cancerRisk.txt", header=TRUE, sep="\t")
+x <- log10(myT$CumulativeCellDivisions)
+y <- log10(myT$Lifetime_cancer_risk)
+plot(x,y)
+```
+
+(1B):   Using the lm function, fit a linear model with Lifetime_cancer_risk as the Y variable and CumulativeCellDivisions as the x-data.  Add the regression line to the plot using the function abline(myLm)  (where myLm is the linear model you created).
+
+```{r}
+myLm <- lm(y ~ x)
+plot(x,y)
+abline(myLm)
+```
+
+(1C):  What is the p-value for the null hypothesis that the slope of the regression between these two variables is zero?  What is the r-squared value of the model?
+
+```{r}
+summary(myLm)
+```
+The p-value is 2.03e-11. The r-squared value is 0.6463.
+
+(1D): Are the assumptions of constant variance and normal distribution of the residues reasonable for this model?  Justify your answer.
+
+```{r}
+hist(myLm$residuals)
+plot(myLm)
+```
+Yes because the numbers are normally distributed and have constant equal variance throughout the data based on the plotting of the linear model's fitted values vs residuals and qqnorm plot.
+
+(2) Consider the case-control file for the colorectal adenomas data set that is here:
+	http://afodor.github.io/classes/stats2015/caseControlData.txt
+    A separate file gives obesity (BMI) data for these same subjects:
+	http://afodor.github.io/classes/stats2015/BMI_Data.txt
+
+For each OTU in the spreadsheet, generate a p-value from linear regression comparing BMI to the relative abundance of each OTU. 
+
+Graph out all the p-values.  
+
+Do they appear uniformly distributed? Does the microbial community appear to be influencing body weight in this cohort?  Are any of these associations significant at a 10% false discovery rate?
+
+Hints:  To lookup the ids in the BMI table, you will need to some processing on the “sample” column in the caseControl file.  The following code will convert the a sampleID so that it will match the BMI file.
+	# remove case and control
+key <- sub("case", "", sampleID)
+	key <- sub("control", "", key)
+	
+	# remove extraneous information from the suffix
+	key <- strsplit( key, "_")[[1]][1]
+
+Also, to get the p-value out of the linear model try:
+	anova( myLm)$"Pr(>F)"[1]
+We’ll see why that work shortly in future lectures.
+```{r}
+casedata <- read.table("./caseControlData.txt", sep="\t",header=TRUE)
+bmidata <- read.table("./BMI_Data.txt", sep="\t", header = TRUE)
+bmidata <- na.omit(bmidata)
+
+# remove case and control
+casedata$sample <- sub("case", "", casedata$sample)
+casedata$sample <- sub("control", "", casedata$sample)
+	
+# remove extraneous information from the suffix
+for (i in 1:length(casedata$sample)) {
+  casedata$sample[i] <- strsplit(casedata$sample, "_")[[i]][1]
+}
+# referenceTDB[referenceTDB$patientID=="idlookingfor",]$bmi
+
+names <- casedata$sample
+both <- merge(bmidata,casedata,by.y="sample",by.x="studyid")
+
+#num = 0
+#for (i in 1:length(casedata$sample)) {
+  # bmi[bmi$studyid=="D5-686-525",]$bmi
+  # casedata[casedata$sample == "D5-686-525",]
+#  ys[i] <- bmidata[bmidata$studyid == casedata$sample[i],]$bmi
+  # print(casedata$sample[i])
+#  num = 0
+#  for (j in colnames(casedata[casedata$sample == casedata$sample[i],])) {
+#    num = num + 1
+#    if (j == "sample") {
+#      next
+#    }
+    # (j)
+#    xs[num] <- casedata[casedata$sample == casedata$sample[i],]$j
+#  }
+#  x <- xs
+#  x[i] <- xs
+#   x[i] <- tail(casedata[casedata$sample == casedata$sample[i],],-2)
+#}
+pValues <- vector();
+for (i in 3:ncol(both)) {
+  bmi <- both$bmi
+  case <- both[,i]
+  myLm <- lm(bmi ~ case)
+  pValues[i] <- anova( myLm)$"Pr(>F)"[1]
+}
+pValues <- na.omit(pValues)
+# print(length(pValues[pValues<0.1]))
+print(sum(p.adjust(pValues,method = "BH") <= 0.1)) # 0 = no significant hits
+hist(pValues)
+```
+They appear to be somewhat uniformly distributed. This would suggest that the null hypothesis is true and that the microbial community does not influence body weight. There are no significant associations at a 10% false discovery rate. 
