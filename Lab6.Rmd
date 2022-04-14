@@ -1,0 +1,125 @@
+---
+title: "Lab6"
+author: "Jonathan Kim"
+date: "3/31/2022"
+output: html_document
+---
+
+Due April 14th (2 week lab); send what you have to afodor@uncc.edu with “Lab #6” in the subject line.   As usual, show all of your code.
+(1)	We again return to our RNA seq dataset of E. Coli genes from mice.  
+The URL is here:
+http://afodor.github.io/classes/stats2015/longitdunalRNASeqData.zip
+As before, read and normalize the counts table ( “nc101_scaff_dataCounts.txt “ into R).  For example:
+setwd("C:\\somewhere")
+
+myT<-read.table("nc101_scaff_dataCounts.txt",sep="\t",header=TRUE,row.names=1)
+
+# remove rare genes
+myT <- myT[ apply( myT,1, median)> 5,]
+
+myTNorm <- myT
+for ( i in 1:ncol(myT))
+{
+	colSum = sum(myT[,i])
+	myTNorm[,i] =myTNorm[,i]/colSum
+}
+(The first 3 columns are “day 2”, the next 3 columns are “week 12” and the last 5 are “week 18” (even though they say w20)).  
+(A)	For each row in the spreadsheet, perform a one-way ANOVA with categories “day 2”, “week 12” and “week 18”.  Plot out the histogram of all p-values.  How many genes are significant at a BH FDR-corrected 0.05 threshold. 
+
+```{r}
+rm(list=ls())
+myT<-read.table("./longitdunalRNASeqData/nc101_scaff_dataCounts.txt",sep="\t",header=TRUE,row.names=1)
+# remove rare genes
+myT <- myT[ apply( myT,1, median)> 5,]
+
+myTNorm <- myT
+for ( i in 1:ncol(myT))
+{
+	colSum = sum(myT[,i])
+	myTNorm[,i] =myTNorm[,i]/colSum
+}
+
+pValues <- vector()
+cats <- factor(c(rep("day2",3),rep("week12",3),rep("week20",5)))
+
+for( i in 1:nrow(myTNorm)) 
+{
+	myData <- as.numeric(myTNorm[i,])
+  myLm <- lm(myData ~ cats)
+  pValues[i] <- anova(myLm)$ "Pr(>F)"[1]
+}
+pV <- sum(p.adjust(pValues,method = "BH") <= 0.05)
+print(pV)
+hist(pValues)
+```
+612 genes are significant at a BH FDR-corrected 0.05 threshold. 
+
+(B)	Next make an ANOVA as a linear regression as a function of time (so 2 days, 86 days and 128 days).  Plot out the histogram of all p-values.  How many genes are significant at a BH FDR-corrected 0.05 threshold. 
+
+```{r}
+pValues<-vector()
+b<-vector()
+cats <- c(rep(2,3),rep(86,3),rep(128,5))
+for( i in 1:nrow(myTNorm)) 
+{
+  myData <- as.numeric(myTNorm[i,])
+  myLm2 <- lm(myData ~ cats)
+  b[i] <- anova(myLm2)$ "Pr(>F)"[1]
+}
+bBH <- sum(p.adjust(b,method = "BH") <= 0.05)
+print(bBH)
+hist(b)
+```
+448 genes are significant at a BH FDR-corrected 0.05 threshold. 
+
+(C)	Finally, for each row in the spreadsheet perform an ANVOA comparing the three-parameter model from (A) and the two parameter model from (B).  Plot out the histogram of all p-values.  For how many genes is there a significant difference between these two models at a BH FDR-corrected threshold. 
+
+```{r}
+c<- vector()
+fullP <- vector()
+redP<-vector()
+index <- vector()
+fullCats <- factor(c(rep("day2",3),rep("week12",3),rep("week20",5)))
+redCats <- c(rep(2,3),rep(86,3),rep(128,5))
+for( i in 1:nrow(myTNorm)) 
+{
+  index[i] <- i
+  myData <- as.numeric(myTNorm[i,])
+  fullModel <- lm(myData ~ fullCats)
+  fullP[i] <- anova(fullModel)$ "Pr(>F)"[1]
+  reducedModel <- lm(myData ~ redCats)
+  redP[i] <- anova(reducedModel)$ "Pr(>F)"[1]
+  fullResiduals <- sum(residuals(fullModel)^2)
+  reducedResiduals <- sum(residuals(reducedModel)^2) 
+  f = (((reducedResiduals - fullResiduals)/1)/ (fullResiduals/8))
+  c[i] <- pf(f,1,8,lower.tail=FALSE)
+}
+cBH <- sum(p.adjust(c,method = "BH") <= 0.05)
+print(cBH)
+hist(c)
+```
+For 51 genes, there is a significant difference between these two models at a BH FDR-corrected threshold.
+
+(D)	 Make three graphs showing the relative abundance of the most significant gene under each of the three ANOVA models.  For (A) and (C), the x-axis will the category (day 3, week 12 and week 18) and the y-axis will be the relative abundance.  Be sure to properly label and title all graphs and axes.  For (B) the x-axis will be time (in days) and the y-axis will be the relative abundance. For the graph of the top hit from (B), include the regression line for the plot from (B).
+
+```{r}
+myFrame <- data.frame(index,fullP,redP,c)
+fullCats <- factor(c(rep("day2",3),rep("week12",3),rep("week20",5)))
+redCats <- c(rep(2,3),rep(86,3),rep(128,5))
+
+myFrame <- myFrame[ order(myFrame$fullP), ] 
+boxplot( as.numeric( myTNorm[ myFrame$index[1],]) ~ fullCats, xlab="Time",ylab="Relative Abundance",main="Three Parameter ANOVA") 
+
+redFrame <- data.frame(index,fullP,redP,c)
+redFrame <- redFrame[ order(redFrame$redP), ] 
+boxplot(as.numeric( myTNorm[ redFrame$index[1],]) ~ redCats,xlab="Time",ylab="Relative Abundance",main="Two Parameter ANOVA") 
+abline(lm(as.numeric( myTNorm[ redFrame$index[1],]) ~ redCats))
+
+finalFrame <- data.frame(index,fullP,redP,c)
+finalFrame <- finalFrame[ order(finalFrame$c), ] 
+boxplot( as.numeric( myTNorm[ finalFrame$index[1],]) ~ fullCats,xlab="Time",ylab="Relative Abundance",main="Difference Between Both Models") 
+```
+
+(E)	 Overall, do you think the three parameter model in (A) or the two-parameter model in (B) is more appropriate for these data?  Justify your answer.
+
+I think that the three parameter model is more appropriate for the data when comparing it to the difference in models. It seems to fit the difference better than the two parameter model in closeness of box plots. This is probably due to it having more parameters to deal with for the group means and the reduced model does take out some parameters, possibly reflecting the data less accurately/tighter.
