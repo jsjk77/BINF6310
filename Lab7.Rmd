@@ -1,0 +1,272 @@
+---
+title: "Lab7"
+output: html_document
+---
+
+Note that WT and IL10-/- animals are in different cages.  So “Cage1_WT” is a different cage from “Cage1_10-/-“.
+
+(1)	Download the dataset.  Perform PCA ordination.  
+(For example:
+rm(list=ls())
+
+setwd("C:\\Users\\afodor\\git\\afodor.github.io\\classes\\stats2015\\")
+
+inFileName <- paste("prePostPhylum.txt", sep ="")
+
+myT <-read.table(inFileName,header=TRUE,sep="\t")
+numCols <- ncol(myT)
+myColClasses <- c(rep("character",4), rep("numeric", numCols-4))
+myT <-read.table(inFileName,header=TRUE,sep="\t",colClasses=myColClasses)
+
+myTData<-myT[,5:10]
+
+myPCOA <- princomp(myTData)
+```{r}
+rm(list=ls())
+inFileName <- paste("prePostPhylum.txt", sep ="")
+myT <-read.table(inFileName,header=TRUE,sep="\t")
+numCols <- ncol(myT)
+myColClasses <- c(rep("character",4), rep("numeric", numCols-4))
+myT <-read.table(inFileName,header=TRUE,sep="\t",colClasses=myColClasses)
+myTData<-myT[,5:10]
+(myPCOA <- princomp(myTData))
+```
+
+(2)	Graph PCA1 vs. PCA2.  Make three versions of the graph.  One colored by genotype,
+one colored by cage and one colored by timepoint (pre-vs-post)
+
+```{r}
+wt<- vector()
+ten<-vector()
+pre<-vector()
+post<-vector()
+# names <- unique(myT$cage)
+cage3_WT <- vector()
+cage2_WT <- vector()
+cage1_WT <- vector()
+cage6_WT <- vector()
+cage4_10 <- vector()
+cage3_10 <- vector()
+cage5_10 <- vector()
+cage5_WT <- vector()
+cage4_WT <- vector()
+cage2_10 <- vector()
+cage1_10 <- vector()
+wt2<- vector()
+ten2<-vector()
+pre2<-vector()
+post2<-vector()
+cage3_WT2 <- vector()
+cage2_WT2 <- vector()
+cage1_WT2 <- vector()
+cage6_WT2 <- vector()
+cage4_102 <- vector()
+cage3_102 <- vector()
+cage5_102 <- vector()
+cage5_WT2 <- vector()
+cage4_WT2 <- vector()
+cage2_102 <- vector()
+cage1_102 <- vector()
+pca <- myPCOA$scores[,1]
+pca2 <- myPCOA$scores[,2]
+
+for (i in 1:nrow(myT)) { 
+  if (myT[i,4] == "WT") {
+    wt <- c(wt,pca[i])
+    wt2 <- c(wt2,pca2[i])
+  }
+  if (myT[i,4] == "10-/-") {
+    ten <- c(ten,pca[i])
+    ten2 <- c(ten2,pca2[i])
+  }
+  if (myT[i,2] == "Cage1_WT") {
+    cage1_WT <- c(cage1_WT, pca[i])
+    cage1_WT2 <- c(cage1_WT2, pca2[i])
+  }
+  if (myT[i,2] == "Cage2_WT") {
+    cage2_WT <- c(cage2_WT, pca[i])
+    cage2_WT2 <- c(cage2_WT2, pca2[i])
+  }
+  if (myT[i,2] == "Cage3_WT") {
+    cage3_WT <- c(cage3_WT, pca[i])
+    cage3_WT2 <- c(cage3_WT2, pca2[i])
+  }
+  if (myT[i,2] == "Cage4_WT") {
+    cage4_WT <- c(cage4_WT, pca[i])
+    cage4_WT2 <- c(cage4_WT2, pca2[i])
+  }
+  if (myT[i,2] == "Cage5_WT") {
+    cage5_WT <- c(cage5_WT, pca[i])
+    cage5_WT2 <- c(cage5_WT2, pca2[i])
+  }
+  if (myT[i,2] == "Cage6_WT") {
+    cage6_WT <- c(cage6_WT, pca[i])
+    cage6_WT2 <- c(cage6_WT2, pca2[i])
+  }
+  if (myT[i,2] == "Cage1_10-/-") {
+    cage1_10 <- c(cage1_10, pca[i])
+    cage1_102 <- c(cage1_102, pca2[i])
+  }
+  if (myT[i,2] == "Cage2_10-/-") {
+    cage2_10 <- c(cage2_10, pca[i])
+    cage2_102 <- c(cage2_102, pca2[i])
+  }
+  if (myT[i,2] == "Cage3_10-/-") {
+    cage3_10 <- c(cage3_10, pca[i])
+    cage3_102 <- c(cage3_102, pca2[i])
+  }
+  if (myT[i,2] == "Cage4_10-/-") {
+    cage4_10 <- c(cage4_10, pca[i])
+    cage4_102 <- c(cage4_102, pca2[i])
+  }
+  if (myT[i,2] == "Cage5_10-/-") {
+    cage5_10 <- c(cage5_10, pca[i])
+    cage5_102 <- c(cage5_102, pca2[i])
+  }
+  if (myT[i,3] == "PRE") {
+    pre <- c(pre,pca[i])
+    pre2 <- c(pre2,pca2[i])
+  }
+  if (myT[i,3] == "POST") {
+    post <- c(post,pca[i])
+    post2 <- c(post2,pca2[i])
+  }
+}
+plot(wt,wt2,col="red",main="Genotype")
+points(ten,ten2,col="blue")
+legend(0,0,col=c("red","blue"),pch=c(1,1),legend=c("WT","10-/-"))
+plot(cage1_WT,cage1_WT2,col="red",main="Cage")
+points(cage1_10,cage1_102,col="blue")
+points(cage2_WT,cage2_WT2,col="green")
+points(cage2_10,cage2_102,col="yellow")
+points(cage3_WT,cage3_WT2,col="black")
+points(cage3_10,cage3_102,col="pink")
+points(cage4_WT,cage4_WT2,col="purple")
+points(cage4_10,cage4_102,col="lightgreen")
+points(cage5_WT,cage5_WT2,col="gray")
+points(cage5_10,cage5_102,col="cyan")
+points(cage6_WT,cage6_WT2,col="brown")
+legend(0,0.75,col=c("red","blue","green","yellow","black","pink","purple","lightgreen","gray","cyan","brown"),pch=c(1,1,1,1,1,1,1,1,1,1,1),legend=c("WT1","10-/-1","WT2","10-/-2","WT3","10-/-3","WT4","10-/-4","WT5","10-/-5","WT6"))
+plot(pre,pre2,col="red",main="Time")
+points(post,post2,col="blue")
+legend(0,0,col=c("red","blue"),pch=c(1,1),legend=c("PRE","POST"))
+```
+
+(3)	Fill in the following table for p-values testing the null hypothesis for PCA 1 and 2.  For cage, use a way one-ANOVA.  For genotype and timepoint (“pre” vs “post”) use a t-test
+
+	                   PCA1 	         PCA2
+Cage		             0.9920581       1.629589e-07
+Genotype		         0.929701        1.274344e-10
+Time (pre vs. post)	 2.519974e-29    0.4268188
+
+Which variable seems to be most associated with the first PCA axis?  Which variable is most associated with the second PCA axis?  Does cage seem to be having an effect on these data?
+
+```{r}
+(t.test(wt,ten)$p.value)
+(t.test(wt2,ten2)$p.value)
+(t.test(pre,post)$p.value)
+(t.test(pre2,post2)$p.value)
+data1<-c(cage1_WT,cage2_WT,cage3_WT,cage4_WT,cage5_WT,cage6_WT,cage1_10,cage2_10,cage3_10,cage4_10,cage5_10)
+data2<-c(cage1_WT2,cage2_WT2,cage3_WT2,cage4_WT2,cage5_WT2,cage6_WT2,cage1_102,cage2_102,cage3_102,cage4_102,cage5_102)
+cages<-c(rep("WT1",length(cage1_WT)),rep("WT2",length(cage2_WT)),rep("WT3",length(cage3_WT)),rep("WT4",length(cage4_WT)),rep("WT5",length(cage5_WT)),rep("WT6",length(cage6_WT)),rep("10-/-1",length(cage1_10)),rep("10-/-2",length(cage2_10)),rep("10-/-3",length(cage3_10)),rep("10-/-4",length(cage4_10)),rep("10-/-5",length(cage5_10)))
+myLM<-lm(data1~cages)
+(anova(myLM)$"Pr(>F)"[1])
+myLM2<-lm(data2 ~ cages)
+(anova(myLM2)$"Pr(>F)"[1])
+```
+The variable that seems to be most associated with the first PCA axis  is the timepoint variable and the genotype for the second PCA axis. Cage seems to have an effect on the second PCA axis. 
+
+(4)For the POST timepoints only:
+A.	 For each phyla, graph the relative abundance of that phyla vs. cage.  Does there appear to be a cage effect across different phyla?
+
+```{r}
+myT <- myT[myT$time == "POST",]
+cage <- myT$cage
+genotype <- myT$genotype
+groups <- unique(myT$cage[order(cage)])
+teneri <- aggregate(myT$Tenericutes,by=list(myT$cage),FUN=mean)$x
+verru <- aggregate(myT$Verrucomicrobia,by=list(myT$cage),FUN=mean)$x
+bacter <- aggregate(myT$Bacteroidetes,by=list(myT$cage),FUN=mean)$x
+actin <- aggregate(myT$Actinobacteria,by=list(myT$cage),FUN=mean)$x
+firmic <- aggregate(myT$Firmicutes,by=list(myT$cage),FUN=mean)$x
+proteo <- aggregate(myT$Proteobacteria,by=list(myT$cage),FUN=mean)$x
+nums <- seq(1,length(groups),1)
+barplot(teneri,names.arg=groups,width = 0.75,main="Tenericutes")
+barplot(verru,names.arg=groups,width = 0.75,main="Verrucomicrobia")
+barplot(bacter,names.arg=groups,width = 0.75,main="Bacteroidetes")
+barplot(actin,names.arg=groups,width = 0.75,main="Actinobacteria")
+barplot(firmic,names.arg=groups,width = 0.75,main="Firmicutes")
+barplot(proteo,names.arg=groups,width = 0.75,main="Proteobacteria")
+```
+There appears to be a cage effect in Proteobacteria, Tenericutes, and Verrucomicrobia.
+
+B.	For each phyla build a mixed linear model with genotype as the fixed variable and cage as a random variable.  Report the intraclass correlation coefficient for each phyla.  Are there any phyla that are significantly different for genotype in the mixed model at a 10% false discovery rate?
+Hints:
+(1)	If you use par(mfrow=c(3,2)) you can fit all 6 plots for phyla vs. cage on one graph.  You can put the p-values and intraclass correlation coefficient in the “main” text above each graph to make a nice summary figure.
+(2)	It can be useful to make a dataframe with just the data you want before building your model.  So if you are looping through columns in a “myT” that you’ve read with read.table and i is your column index..
+	myT <- myT[myT$time == "POST",]
+	bug <- myT[,i]
+	cage <- myT$cage
+	genotype <- myT$genotype
+	myFrame <- data.frame(bug, cage, genotype)
+	(and then build your models with data=myFrame…)
+(3)	Getting a p-value out of the mixed linear model could be done with something like:
+unclass(summary(M.mixed))$tTable[2,5]
+Getting the rho(intraclass correlation coefficient) out of a GLS model can be done with:
+coef(M.gls$modelStruct[1]$corStruct,unconstrained=FALSE)[[1]]
+	(4) You can have both points and boxplots on a scatter graph with something like:
+		boxplot(myFrame$bug ~myFrame$cage)
+		stripchart(bug ~ cage, data = myFrame,vertical = TRUE, pch = 21, add=TRUE)
+		
+```{r}
+q<-vector()
+uni<-unique(cage)
+for (i in 1:length(uni)) {
+  q[which(cage == uni[i])]<-i
+}
+myT <-read.table(inFileName,header=TRUE,sep="\t")
+numCols <- ncol(myT)
+myColClasses <- c(rep("character",4), rep("numeric", numCols-4))
+myT <-read.table(inFileName,header=TRUE,sep="\t",colClasses=myColClasses)
+myT <- myT[myT$time == "POST",]
+mixed <- data.frame(myT$Tenericutes,myT$Verrucomicrobia,myT$Bacteroidetes,myT$Actinobacteria,myT$Firmicutes,myT$Proteobacteria,cage,genotype,q)
+par(mfrow=c(3,2))
+boxplot(mixed$myT.Tenericutes~q,names = uni, ylab = "Abundance", main = "Tenericutes vs Cage")
+stripchart(mixed$myT.Tenericutes~q,data=mixed,vertical=TRUE,pch=21,add=TRUE)
+boxplot(mixed$myT.Verrucomicrobia~q,names = uni, ylab = "Abundance", main = "Verrucomicrobias vs Cage")
+stripchart(mixed$myT.Verrucomicrobia~q,data=mixed,vertical=TRUE,pch=21,add=TRUE)
+boxplot(mixed$myT.Bacteroidetes~q,names = uni, ylab = "Abundance", main = "Bacterioidetes vs Cage")
+stripchart(mixed$myT.Bacteroidetes~q,data=mixed,vertical=TRUE,pch=21,add=TRUE)
+boxplot(mixed$myT.Actinobacteria~q,names = uni, ylab = "Abundance", main = "Actinobacteria vs Cage")
+stripchart(mixed$myT.Actinobacteria~q,data=mixed,vertical=TRUE,pch=21,add=TRUE)
+boxplot(mixed$myT.Firmicutes~q,names = uni, ylab = "Abundance", main = "Firmicutes vs Cage")
+stripchart(mixed$myT.Firmicutes~q,data=mixed,vertical=TRUE,pch=21,add=TRUE)
+boxplot(mixed$myT.Proteobacteria~q,names = uni, ylab = "Abundance", main = "Proteobacteria vs Cage")
+stripchart(mixed$myT.Proteobacteria~q,data=mixed,vertical=TRUE,pch=21,add=TRUE)
+
+library(nlme)
+pValuesGLS <- vector()
+pValues <- vector()
+index <- 1
+allrho<-vector()
+p<-vector()
+for (i in 1:6) {
+    myT <- mixed[,i]
+    cage <- mixed$q
+    genotype <- mixed$genotype
+    M.gls<-gls(myT~genotype, method="REML",correlation=corCompSymm(form=~1|cage),data=mixed)
+    pValuesGLS[index] <- anova(M.gls)$"p-value"[2]
+    M.mixed <- lme(myT~genotype,method="REML",random=~1|cage,data=mixed)
+    pValues[index] <- anova(M.mixed)$"p-value"[2]
+    # p[index]<-unclass(summary(M.mixed))$tTable[2,5] #Same as anova p-values
+    rho <- coef(M.gls$modelStruct[1]$corStruct,unconstrained=FALSE)[[1]]
+    allrho[index]<-rho
+    index = index + 1
+}
+print("intraclass correlations coefficients are")
+print(allrho)
+pV <- sum(p.adjust(pValues,method = "BH") <= 0.10)
+print(pV)
+hist(pValues)
+```
+Yes, there are phyla that are significantly different for genotype in the mixed model at a 10% false discovery rate.
